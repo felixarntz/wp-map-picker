@@ -44,16 +44,16 @@
 			var is_default = false;
 
 			if ( 'coords' === this.settings.store ) {
-				latlng = this.parseLatLng( this.$elem.val() );
+				latlng = this.parseLatLng( this.value() );
 				if ( ! latlng ) {
 					latlng = new google.maps.LatLng( this.settings.default_location.lat, this.settings.default_location.lng );
 					is_default = true;
 				}
 				callback( latlng, is_default );
 			} else {
-				if ( this.$elem.val() ) {
+				if ( this.value() ) {
 					this.geocoder.geocode({
-						address: this.$elem.val()
+						address: this.value()
 					}, function( results ) {
 						if ( 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].geometry && 'undefined' !== typeof results[0].geometry.location ) {
 							callback( results[0].geometry.location, false );
@@ -158,7 +158,11 @@
 
 		updateFieldValue: function() {
 			if ( 'coords' === this.settings.store ) {
-				this.$elem.val( this.formatLatLng( this.latlng ) );
+				this.value( this.formatLatLng( this.latlng ) );
+
+				if ( 'function' === typeof this.settings.change ) {
+					this.settings.change.call( this );
+				}
 			} else {
 				var self = this;
 
@@ -166,7 +170,11 @@
 					location: this.latlng
 				}, function( results ) {
 					if ( 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].formatted_address ) {
-						self.$elem.val( results[0].formatted_address );
+						self.value( results[0].formatted_address );
+
+						if ( 'function' === typeof self.settings.change ) {
+							self.settings.change.call( self );
+						}
 					}
 				});
 			}
@@ -195,6 +203,27 @@
 			}
 
 			return ( '' + val.lat() ).replace( '.', this.settings.decimal_separator ) + '|' + ( '' + val.lng() ).replace( '.', this.settings.decimal_separator );
+		},
+
+		value: function( value ) {
+			if ( 'undefined' === value ) {
+				return this.$elem.val();
+			}
+
+			this.$elem.val( value );
+		},
+
+		setting: function( key, value ) {
+			if ( 'object' === key ) {
+				$.extend( this.settings, key );
+				return;
+			}
+
+			if ( 'undefined' === value ) {
+				return this.settings[ key ];
+			}
+
+			this.settings[ key ] = value;
 		}
 	};
 
@@ -216,6 +245,23 @@
 	 * @return jQuery
 	 */
 	$.fn.wpMapPicker = function( settings ) {
+		if ( $( this ).data( 'wp-map-picker' ) ) {
+			var controller = $( this ).data( 'wp-map-picker' );
+			var arg;
+
+			if ( 'value' === settings ) {
+				arg = Array.prototype.slice.call( arguments, 1 );
+				return controller.value( arg );
+			} else if ( 'object' === typeof settings ) {
+				return controller.setting( settings );
+			} else if ( 'string' === typeof settings ) {
+				arg = Array.prototype.slice.call( arguments, 1 );
+				return controller.setting( settings, arg );
+			}
+
+			return;
+		}
+
 		settings = $.extend({
 			store: 'address',
 			zoom: 15,
@@ -226,14 +272,11 @@
 				lng: '0.0',
 				zoom: 2
 			},
-			decimal_separator: '.'
+			decimal_separator: '.',
+			change: false
 		}, settings || {});
 
 		return this.each( function() {
-			if ( $( this ).data( 'wp-map-picker' ) ) {
-				return;
-			}
-
 			var $elem = $( this );
 			var elem_settings = $.extend({}, settings );
 			var data_settings = $elem.data( 'settings' );
