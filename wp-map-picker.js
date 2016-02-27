@@ -84,13 +84,17 @@
 						self.geocoder.geocode({
 							address: request.term
 						}, function( results ) {
-							response( $.map( results, function( item ) {
-								return {
-									label: item.formatted_address,
-									value: item.formatted_address,
-									latlng: item.geometry.location
-								};
-							}) );
+							if ( null !== results ) {
+								response( $.map( results, function( item ) {
+									return {
+										label: item.formatted_address,
+										value: item.formatted_address,
+										latlng: item.geometry.location
+									};
+								}) );
+							} else {
+								response( [] );
+							}
 						});
 					},
 					select: function( e, ui ) {
@@ -127,7 +131,7 @@
 				self.geocoder.geocode({
 					location: latlng
 				}, function( results ) {
-					if ( 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].formatted_address ) {
+					if ( null !== results && 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].formatted_address ) {
 						self.element.val( results[0].formatted_address );
 
 						if ( ! manual_change && 'function' === typeof self.options.change ) {
@@ -179,7 +183,7 @@
 					self.geocoder.geocode({
 						address: val
 					}, function( results ) {
-						if ( 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].geometry && 'undefined' !== typeof results[0].geometry.location ) {
+						if ( null !== results && 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].geometry && 'undefined' !== typeof results[0].geometry.location ) {
 							self._createMap( results[0].geometry.location );
 						} else {
 							self.element.val( null );
