@@ -32,7 +32,8 @@
 				zoom: 2
 			},
 			decimal_separator: '.',
-			change: false
+			change: false,
+			clear: false
 		},
 
 		_create: function() {

@@ -1,6 +1,6 @@
 {
   "name": "wp-map-picker",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "This jQuery plugin for WordPress can be used to transform an input field into a flexible map field with a location picker.",
   "keywords": [
     "wordpress",

@@ -9,6 +9,7 @@ This jQuery plugin for WordPress can be used to transform an input field into a 
 * transforms a simple input field in the WordPress admin into a map picker where you can both enter a value in an input field (with autocompletion) and automatically show it on the map or select a location on the map and automatically put it in the input field
 * handles how the value is stored in the input field (you're free to choose between address and coords)
 * uses the Google Maps API v3 to display the map
+* is based on jQuery UI Widget for a standardized API
 * uses WordPress Core technology wherever possible
 * customizable with numerous settings which can be defined in the function call or as data attributes
 
@@ -28,8 +29,8 @@ To include the script and stylesheet, enqueue the script and stylesheet like so:
 <?php
 $gmaps_url = add_query_arg( 'language', str_replace( '_', '-', get_locale() ), 'https://maps.google.com/maps/api/js' );
 wp_enqueue_script( 'google-maps', $gmaps_url, array(), false, true );
-wp_enqueue_script( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.js', array( 'jquery', 'jquery-ui-autocomplete', 'google-maps' ), '0.1.0', true );
-wp_enqueue_style( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.css', array(), '0.1.0' );
+wp_enqueue_script( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.js', array( 'jquery', 'jquery-ui-widget', 'jquery-ui-autocomplete', 'google-maps' ), '0.5.0', true );
+wp_enqueue_style( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.css', array(), '0.5.0' );
 
 ```
 
@@ -45,7 +46,7 @@ jQuery( '.custom-map-field' ).wpMapPicker();
 
 ## Plugin Settings
 
-The plugin supports numerous settings so that you can tweak how your fields work. There are two ways to apply settings to a field: Either specify the settings (as an object) when initializing the plugin in Javascript, or put the settings into a `data-settings` attribute on the field (in JSON format).
+The plugin supports numerous settings so that you can tweak how your fields work. There are two ways to apply settings to a field: Either specify the settings (as an object) when initializing the plugin in Javascript, or apply them as data attributes on the field.
 
 Here you find a list of all available settings:
 
@@ -78,6 +79,34 @@ Here you find a list of all available settings:
 * Defines the decimal separator used for coords
 * Accepts '.' or ','
 * Default: '.'
+
+`change`:
+* An optional callback function to run when the location has changed
+* Accepts a function
+* Default: false
+
+`clear`:
+* An optional callback function to run when the location has been cleared (reset to default)
+* Accepts a function
+* Default: false
+
+## Plugin Methods
+
+There are a number of methods that you can call by using a construct like `jQuery( '{{SELECTOR}}' ).wpMapPicker( '{{NAME_OF_FUNCTION}}' {{,FUNCTION_PARAMS}} )`.
+
+`clear`:
+* Clears the location selection (resets it to the default)
+
+`refresh`:
+* Refreshes the Google map; this needs to be run whenever the map becomes visible inside dynamic content, for example an accordion
+
+`latlng`:
+* Dynamic getter/setter method for the location object (this is _not_ the field value itself!)
+* Accepts an Google Maps API latlng object (only for the setter functionality)
+
+`value`:
+* Dynamic getter/setter method for the field value
+* Accepts a string ("latitude|longitude" or "address", depending on `store` setting) (only for the setter functionality)
 
 ## Contribute
 
