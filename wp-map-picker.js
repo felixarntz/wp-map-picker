@@ -94,7 +94,11 @@
 						});
 					},
 					select: function( e, ui ) {
+						self.element.val( ui.item.label );
 						self._createMap( ui.item.latlng );
+						if ( 'function' === typeof self.options.change ) {
+							self.options.change.call( self );
+						}
 					}
 				});
 			}
@@ -231,6 +235,15 @@
 				if ( 'function' === typeof this.options.clear ) {
 					this.options.clear.call( this );
 				}
+			}
+		},
+
+		refresh: function() {
+			google.maps.event.trigger( this.map, 'resize' );
+			if ( this.latlng ) {
+				this.map.setCenter( this.latlng );
+			} else {
+				this.map.setCenter( this.default_latlng );
 			}
 		},
 
