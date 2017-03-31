@@ -23,6 +23,7 @@
 	var MapPicker = {
 		options: {
 			store: 'address',
+			storeAdditional: false,
 			zoom: 15,
 			draggable: true,
 			mapType: 'roadmap', // roadmap, satellite, terrain or hybrid
@@ -58,39 +59,34 @@
 				streetViewControl: 0,
 				mapTypeId: google.maps.MapTypeId[ self.options.mapType.toUpperCase() ]
 			});
-			this.marker = new google.maps.Marker({
+			self.marker = new google.maps.Marker({
 				position: self.default_latlng,
 				map: self.map,
 				draggable: true
 			});
 
-			self._updateMap();
-
-			self._addListeners();
-		},
-
-		_addListeners: function() {
-			var self = this;
+			var value = self.element.val();
+			if ( 'coords' === self.options.store ) {
+				self._geocodeLatLng( value, self._initMap );
+			} else {
+				self._geocodeAddress( value, self._initMap );
+			}
 
 			if ( 'coords' === self.options.store ) {
 				self.element.on( 'change', function() {
-					var latlng = self._parseLatLng( self.element.val() );
-					if ( latlng ) {
-						self._createMap( latlng );
-					}
+					self._geocodeLatLng( self.element.val(), self._updateMap );
 				});
 			} else {
 				self.element.autocomplete({
 					source: function( request, response ) {
-						self.geocoder.geocode({
-							address: request.term
-						}, function( results ) {
+						self._geocodeAddress( request.term, function( results ) {
 							if ( null !== results ) {
 								response( $.map( results, function( item ) {
 									return {
 										label: item.formatted_address,
 										value: item.formatted_address,
-										latlng: item.geometry.location
+										latlng: item.geometry.location,
+										geocoded: item
 									};
 								}) );
 							} else {
@@ -99,108 +95,153 @@
 						});
 					},
 					select: function( e, ui ) {
-						self.element.val( ui.item.label );
-						self._createMap( ui.item.latlng );
-						if ( 'function' === typeof self.options.change ) {
-							self.options.change.call( self );
-						}
+						self._updateMap( ui.item.geocoded );
 					}
 				});
 			}
 
 			google.maps.event.addListener( self.map, 'click', function( e ) {
-				self._updateFieldValue( e.latLng );
-				self._createMap( e.latLng );
+				self._geocodeLatLng( e.latLng, self._updateField );
 			});
 
 			google.maps.event.addListener( self.marker, 'dragend', function( e ) {
-				self._updateFieldValue( e.latLng );
-				self._createMap( e.latLng );
+				self._geocodeLatLng( e.latLng, self._updateField );
 			});
 		},
 
-		_updateFieldValue: function( latlng, manual_change ) {
-			var self = this;
+		_initMap: function( geocoded ) {
+			if ( geocoded ) {
+				this.latlng = geocoded.geometry.location;
 
-			if ( 'coords' === self.options.store ) {
-				self.element.val( self._formatLatLng( latlng ) );
+				this.marker.setPosition( this.latlng );
+				this.map.setCenter( this.latlng );
 
-				if ( ! manual_change && 'function' === typeof self.options.change ) {
-					self.options.change.call( self );
+				if ( this.is_default ) {
+					this.is_default = false;
+					this.map.setZoom( this.options.zoom );
 				}
 			} else {
-				self.geocoder.geocode({
-					location: latlng
-				}, function( results ) {
-					if ( null !== results && 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].formatted_address ) {
-						self.element.val( results[0].formatted_address );
+				this.latlng = null;
 
-						if ( ! manual_change && 'function' === typeof self.options.change ) {
-							self.options.change.call( self );
-						}
-					}
-				});
+				this.marker.setPosition( this.default_latlng );
+				this.map.setCenter( this.default_latlng );
+
+				if ( ! this.is_default ) {
+					this.is_default = true;
+					this.map.setZoom( this.options.default_location.zoom );
+				}
 			}
 		},
 
-		_createMap: function( latlng ) {
-			var self = this;
+		_updateMap: function( geocoded ) {
+			this._initMap( geocoded );
 
-			self.latlng = latlng;
+			if ( this.options.storeAdditional ) {
+				this._updateAdditionalFields( geocoded );
+			}
 
-			self.marker.setPosition( latlng );
-			self.map.setCenter( latlng );
-			if ( self.is_default ) {
-				self.is_default = false;
-				self.map.setZoom( self.options.zoom );
+			if ( 'function' === typeof this.options.change ) {
+				this.options.change.call( this );
 			}
 		},
 
-		_resetMap: function() {
-			var self = this;
+		_updateField: function( geocoded ) {
+			if ( geocoded ) {
+				this.latlng = geocoded.geometry.location;
 
-			self.latlng = null;
-
-			self.marker.setPosition( self.default_latlng );
-			self.map.setCenter( self.default_latlng );
-			self.map.setZoom( self.options.default_location.zoom );
-			self.is_default = true;
-		},
-
-		_updateMap: function() {
-			var self = this;
-			var val = self.element.val();
-
-			if ( val ) {
-				if ( 'coords' === self.options.store ) {
-					var latlng = self._parseLatLng( val );
-					if ( latlng ) {
-						self._createMap( latlng );
-					} else {
-						self.element.val( null );
-						self._resetMap();
-					}
+				if ( 'coords' === this.options.store ) {
+					this.element.val( this._formatLatLng( geocoded.geometry.location ) );
 				} else {
-					self.geocoder.geocode({
-						address: val
-					}, function( results ) {
-						if ( null !== results && 'undefined' !== typeof results[0] && 'undefined' !== typeof results[0].geometry && 'undefined' !== typeof results[0].geometry.location ) {
-							self._createMap( results[0].geometry.location );
-						} else {
-							self.element.val( null );
-							self._resetMap();
-						}
-					});
+					this.element.val( geocoded.formatted_address );
 				}
 			} else {
-				self.element.val( null );
-				self._resetMap();
+				this.latlng = null;
+
+				this.element.val( null );
 			}
+
+			if ( this.options.storeAdditional ) {
+				this._updateAdditionalFields( geocoded );
+			}
+
+			if ( 'function' === typeof this.options.change ) {
+				this.options.change.call( this );
+			}
+		},
+
+		_updateAdditionalFields: function( geocoded ) {
+			var keys = Object.keys( this.options.storeAdditional );
+			var store, selector, value, oldValue;
+
+			for ( var i in keys ) {
+				store = keys[ i ];
+				selector = this.options.storeAdditional[ store ];
+				oldValue = $( selector ).val();
+				value = null;
+
+				if ( geocoded ) {
+					switch ( store ) {
+						case 'coords':
+							value = this._formatLatLng( geocoded.geometry.location );
+							break;
+						case 'address':
+							value = geocoded.formatted_address;
+							break;
+						case 'latitude':
+							value = this._formatLatOrLng( geocoded.geometry.location.lat() );
+							break;
+						case 'longitude':
+							value = this._formatLatOrLng( geocoded.geometry.location.lng() );
+							break;
+						default:
+							if ( 'undefined' !== typeof geocoded[ store ] ) {
+								value = geocoded[ store ];
+							}
+					}
+				}
+
+				if ( value !== oldValue ) {
+					$( selector ).val( value ).trigger( 'change' );
+				}
+			}
+		},
+
+		_geocodeLatLng: function( latlng, callback ) {
+			if ( ! latlng ) {
+				callback.apply( this, [ latlng ] );
+				return;
+			}
+
+			this._geocodeObject({
+				location: this._parseLatLng( latlng )
+			}, callback );
+		},
+
+		_geocodeAddress: function( address, callback ) {
+			if ( ! address ) {
+				callback.apply( this, [ address ] );
+				return;
+			}
+
+			this._geocodeObject({
+				address: address
+			}, callback );
+		},
+
+		_geocodeObject: function( obj, callback ) {
+			var self = this;
+
+			self.geocoder.geocode( obj, function( results ) {
+				var value;
+				if (  null !== results && 'undefined' !== typeof results[0] ) {
+					value = results[0];
+				}
+
+				callback.apply( self, [ value ] );
+			});
 		},
 
 		_parseLatLng: function( val ) {
-			var self = this;
-
 			if ( 'object' === typeof val && 'function' !== typeof val.lat ) {
 				val = '' + val.lat + '|' + val.lng;
 			} else if ( 'object' === typeof val ) {
@@ -217,29 +258,34 @@
 			}
 
 			for ( var i = 0; i < 2; i++ ) {
-				val[ i ] = parseFloat( val[ i ].replace( self.options.decimal_separator, '.' ) );
+				val[ i ] = this._parseLatOrLng( val[ i ] );
 			}
 
 			return new google.maps.LatLng( val[0], val[1] );
 		},
 
-		_formatLatLng: function( val ) {
-			var self = this;
+		_parseLatOrLng: function( val ) {
+			return parseFloat( val.replace( this.options.decimal_separator, '.' ) );
+		},
 
+		_formatLatLng: function( val ) {
 			if ( 'string' === typeof val ) {
 				return val;
 			}
 
-			return ( '' + val.lat() ).replace( '.', self.options.decimal_separator ) + '|' + ( '' + val.lng() ).replace( '.', self.options.decimal_separator );
+			return this._formatLatOrLng( val.lat() ) + '|' + this._formatLatOrLng( val.lng() );
+		},
+
+		_formatLatOrLng: function( val ) {
+			return ( '' + val ).replace( '.', this.options.decimal_separator );
 		},
 
 		clear: function() {
-			this.element.val( null );
-			if ( ! this.is_default ) {
-				this._resetMap();
-				if ( 'function' === typeof this.options.clear ) {
-					this.options.clear.call( this );
-				}
+			this._initMap();
+			this._updateField();
+
+			if ( 'function' === typeof this.options.clear ) {
+				this.options.clear.call( this );
 			}
 		},
 
@@ -250,32 +296,6 @@
 			} else {
 				this.map.setCenter( this.default_latlng );
 			}
-		},
-
-		latlng: function( latlng ) {
-			if ( 'undefined' === typeof latlng ) {
-				return this.latlng;
-			}
-
-			if ( ! latlng ) {
-				this.element.val( null );
-				this._resetMap();
-			} else {
-				this._updateFieldValue( latlng, true );
-				this._createMap( latlng );
-			}
-		},
-
-		value: function( val ) {
-			if ( 'undefined' === typeof val ) {
-				if ( ! this.latlng ) {
-					return '';
-				}
-				return this.element.val();
-			}
-
-			this.element.val( val );
-			this._updateMap();
 		}
 	};
 
