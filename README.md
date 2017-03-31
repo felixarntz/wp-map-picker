@@ -29,8 +29,8 @@ To include the script and stylesheet, enqueue the script and stylesheet like so:
 <?php
 $gmaps_url = add_query_arg( 'language', str_replace( '_', '-', get_locale() ), 'https://maps.google.com/maps/api/js' );
 wp_enqueue_script( 'google-maps', $gmaps_url, array(), false, true );
-wp_enqueue_script( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.js', array( 'jquery', 'jquery-ui-widget', 'jquery-ui-autocomplete', 'google-maps' ), '0.5.1', true );
-wp_enqueue_style( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.css', array(), '0.5.1' );
+wp_enqueue_script( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.js', array( 'jquery', 'jquery-ui-widget', 'jquery-ui-autocomplete', 'google-maps' ), '0.6.0', true );
+wp_enqueue_style( 'wp-map-picker', 'PATHTOMAPPICKER/wp-map-picker.min.css', array(), '0.6.0' );
 
 ```
 
