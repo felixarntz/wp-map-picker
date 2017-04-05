@@ -17,9 +17,9 @@ This jQuery plugin for WordPress can be used to transform an input field into a 
 
 ### Install the plugin
 
-The preferred method to install this package is to use Bower.
+The preferred method to install this package is to use NPM.
 ```
-bower install wp-map-picker
+npm install wp-map-picker
 ```
 
 ### Enqueue script and stylesheet
@@ -55,6 +55,11 @@ Here you find a list of all available settings:
 * Accepts 'address' or 'coords'
 * Default: 'address'
 
+`storeAdditional`:
+* Object with additional input element selectors to set their values automatically; these inputs have to exist in the page as they will not be created manually
+* Accepts an object where each property is a selector for one input element and the property value is the type of information to store in that element; valid values are 'address', 'coords', 'latitude', 'longitude' or any other field that the Google Geocoder returns in a response
+* Default: false
+
 `zoom`:
 * Sets the initial zoom level for the map
 * Accepts an integer between 1 and 18
@@ -70,12 +75,12 @@ Here you find a list of all available settings:
 * Accepts 'roadmap', 'satellite', 'terrain' or 'hybrid'
 * Default: 'roadmap'
 
-`default_location`:
+`defaultLocation`:
 * Specifies the default location if the input field does not contain any
 * Accepts an object with three properties (`lat` for the latitude default, `lng` for the longitude default and `zoom` for the initial zoom level used when the default location is applied)
 * Default: `{ lat: '0.0', lng: '0.0', zoom: 2 }`
 
-`decimal_separator`:
+`decimalSeparator`:
 * Defines the decimal separator used for coords
 * Accepts '.' or ','
 * Default: '.'
@@ -99,14 +104,6 @@ There are a number of methods that you can call by using a construct like `jQuer
 
 `refresh`:
 * Refreshes the Google map; this needs to be run whenever the map becomes visible inside dynamic content, for example an accordion
-
-`latlng`:
-* Dynamic getter/setter method for the location object (this is _not_ the field value itself!)
-* Accepts an Google Maps API latlng object (only for the setter functionality)
-
-`value`:
-* Dynamic getter/setter method for the field value
-* Accepts a string ("latitude|longitude" or "address", depending on `store` setting) (only for the setter functionality)
 
 ## Contribute
 

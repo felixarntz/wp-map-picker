@@ -42,7 +42,7 @@
 
 			$.extend( self.options, self.element.data() );
 
-			self.default_latlng = self._parseLatLng( self.options.defaultLocation );
+			self.defaultLatLng = self._parseLatLng( self.options.defaultLocation );
 			self.is_default = true;
 
 			self.element.wrap( _wrap );
@@ -52,7 +52,7 @@
 			self.geocoder = new google.maps.Geocoder();
 
 			self.map = new google.maps.Map( self.canvas[0], {
-				center: self.default_latlng,
+				center: self.defaultLatLng,
 				zoom: self.options.defaultLocation.zoom,
 				draggable: self.options.draggable,
 				tilt: 0,
@@ -60,7 +60,7 @@
 				mapTypeId: google.maps.MapTypeId[ self.options.mapType.toUpperCase() ]
 			});
 			self.marker = new google.maps.Marker({
-				position: self.default_latlng,
+				position: self.defaultLatLng,
 				map: self.map,
 				draggable: true
 			});
@@ -123,8 +123,8 @@
 			} else {
 				this.latlng = null;
 
-				this.marker.setPosition( this.default_latlng );
-				this.map.setCenter( this.default_latlng );
+				this.marker.setPosition( this.defaultLatLng );
+				this.map.setCenter( this.defaultLatLng );
 
 				if ( ! this.is_default ) {
 					this.is_default = true;
@@ -294,7 +294,7 @@
 			if ( this.latlng ) {
 				this.map.setCenter( this.latlng );
 			} else {
-				this.map.setCenter( this.default_latlng );
+				this.map.setCenter( this.defaultLatLng );
 			}
 		}
 	};
