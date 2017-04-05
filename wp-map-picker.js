@@ -27,12 +27,12 @@
 			zoom: 15,
 			draggable: true,
 			mapType: 'roadmap', // roadmap, satellite, terrain or hybrid
-			default_location: {
+			defaultLocation: {
 				lat: '0.0',
 				lng: '0.0',
 				zoom: 2
 			},
-			decimal_separator: '.',
+			decimalSeparator: '.',
 			change: false,
 			clear: false
 		},
@@ -42,7 +42,7 @@
 
 			$.extend( self.options, self.element.data() );
 
-			self.default_latlng = self._parseLatLng( self.options.default_location );
+			self.default_latlng = self._parseLatLng( self.options.defaultLocation );
 			self.is_default = true;
 
 			self.element.wrap( _wrap );
@@ -53,7 +53,7 @@
 
 			self.map = new google.maps.Map( self.canvas[0], {
 				center: self.default_latlng,
-				zoom: self.options.default_location.zoom,
+				zoom: self.options.defaultLocation.zoom,
 				draggable: self.options.draggable,
 				tilt: 0,
 				streetViewControl: 0,
@@ -80,17 +80,17 @@
 				self.element.autocomplete({
 					source: function( request, response ) {
 						self._geocodeAddress( request.term, function( results ) {
-							if ( null !== results ) {
-								response( $.map( results, function( item ) {
-									return {
-										label: item.formatted_address,
-										value: item.formatted_address,
-										latlng: item.geometry.location,
-										geocoded: item
-									};
-								}) );
+							if ( results ) {
+								response([
+									{
+										label: results.formatted_address,
+										value: results.formatted_address,
+										latlng: results.geometry.location,
+										geocoded: results
+									}
+								]);
 							} else {
-								response( [] );
+								response([]);
 							}
 						});
 					},
@@ -128,7 +128,7 @@
 
 				if ( ! this.is_default ) {
 					this.is_default = true;
-					this.map.setZoom( this.options.default_location.zoom );
+					this.map.setZoom( this.options.defaultLocation.zoom );
 				}
 			}
 		},
@@ -174,8 +174,8 @@
 			var store, selector, value, oldValue;
 
 			for ( var i in keys ) {
-				store = keys[ i ];
-				selector = this.options.storeAdditional[ store ];
+				selector = keys[ i ];
+				store = this.options.storeAdditional[ selector ];
 				oldValue = $( selector ).val();
 				value = null;
 
@@ -265,7 +265,7 @@
 		},
 
 		_parseLatOrLng: function( val ) {
-			return parseFloat( val.replace( this.options.decimal_separator, '.' ) );
+			return parseFloat( val.replace( this.options.decimalSeparator, '.' ) );
 		},
 
 		_formatLatLng: function( val ) {
@@ -277,7 +277,7 @@
 		},
 
 		_formatLatOrLng: function( val ) {
-			return ( '' + val ).replace( '.', this.options.decimal_separator );
+			return ( '' + val ).replace( '.', this.options.decimalSeparator );
 		},
 
 		clear: function() {
