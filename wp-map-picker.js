@@ -1,5 +1,5 @@
 /*
- * WP Map Picker -  version 0.1.0
+ * WP Map Picker -  version 0.7.0
  *
  * Felix Arntz <felix-arntz@leaves-and-love.net>
  */
@@ -143,6 +143,8 @@
 			if ( 'function' === typeof this.options.change ) {
 				this.options.change.call( this );
 			}
+
+			$( document ).trigger( 'wpMapPicker.updateMap', [ geocoded, this ] );
 		},
 
 		_updateField: function( geocoded ) {
@@ -167,6 +169,8 @@
 			if ( 'function' === typeof this.options.change ) {
 				this.options.change.call( this );
 			}
+
+			$( document ).trigger( 'wpMapPicker.updateField', [ geocoded, this ] );
 		},
 
 		_updateAdditionalFields: function( geocoded ) {
