@@ -1,5 +1,5 @@
 /*
- * WP Map Picker -  version 0.7.0
+ * WP Map Picker -  version 0.7.1
  *
  * Felix Arntz <felix-arntz@leaves-and-love.net>
  */
@@ -12,7 +12,7 @@
 			return this;
 		};
 
-		console.error( 'Google Maps not found' );
+		console.error( 'Google Maps API not found' );
 		return;
 	}
 
@@ -304,4 +304,4 @@
 	};
 
 	$.widget( 'wp.wpMapPicker', MapPicker );
-}( jQuery, google ) );
+}( jQuery, window.google ) );

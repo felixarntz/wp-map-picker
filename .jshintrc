@@ -10,7 +10,6 @@
   "browser": true,
   "globals": {
     "jQuery": false,
-    "console": false,
-    "google": false
+    "console": false
   }
 }
