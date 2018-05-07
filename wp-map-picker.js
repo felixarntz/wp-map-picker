@@ -19,6 +19,7 @@
 	var _wrap = '<div class="wp-mappicker-container" />';
 	var _canvas_wrap = '<div class="wp-mappicker-map-canvas-wrap" />';
 	var _canvas = '<div class="wp-mappicker-map-canvas" />';
+	var _input = '<input style="width:300px;" type="text" id="pac-input" placeholder="Search address">';
 
 	var MapPicker = {
 		options: {
@@ -47,6 +48,7 @@
 
 			self.element.wrap( _wrap );
 			self.canvas_wrap = $( _canvas_wrap ).insertAfter( self.element );
+			self.input = $( _input ).insertBefore( self.canvas_wrap );
 			self.canvas = $( _canvas ).appendTo( self.canvas_wrap );
 
 			self.geocoder = new google.maps.Geocoder();
@@ -63,6 +65,66 @@
 				position: self.defaultLatLng,
 				map: self.map,
 				draggable: true
+			});
+
+			// prevent submit the post on enter the search input
+			self.input.on('keydown', function(e) {
+				if(e.keyCode === 13) {
+					e.preventDefault();
+					return false;
+				}
+			});
+
+			var searchBox = new google.maps.places.SearchBox(self.input.get(0));
+			self.map.controls[google.maps.ControlPosition.TOP_LEFT].push(self.input.get(0));
+
+			self.map.addListener('bounds_changed', function() {
+				searchBox.setBounds(self.map.getBounds());
+			});
+	  
+			var markers = [];
+
+			searchBox.addListener('places_changed', function() {
+				var places = searchBox.getPlaces();
+	  
+				if (places.length === 0) {
+					return;
+				}
+	  
+				markers.forEach(function(marker) {
+					marker.setMap(null);
+				});
+				markers = [];
+	  
+				var bounds = new google.maps.LatLngBounds();
+				places.forEach(function(place) {
+				  	if (!place.geometry) {
+						console.log('Returned place contains no geometry');
+						return;
+					}
+					var icon = {
+						url: place.icon,
+						size: new google.maps.Size(20, 20),
+						origin: new google.maps.Point(0, 0),
+						anchor: new google.maps.Point(17, 34),
+						scaledSize: new google.maps.Size(25, 25)
+					};
+	  
+					// Create a marker for each place.
+					markers.push(new google.maps.Marker({
+						map: self.map,
+						icon: icon,
+						title: place.name,
+						position: place.geometry.location
+					}));
+	  
+					if (place.geometry.viewport) {
+						bounds.union(place.geometry.viewport);
+					} else {
+						bounds.extend(place.geometry.location);
+					}
+				});
+				self.map.fitBounds(bounds);
 			});
 
 			var value = self.element.val();
@@ -99,6 +161,12 @@
 					}
 				});
 			}
+
+			self.map.addListener('click', function(e) {
+				var lat = e.latLng.lat();
+				var lng = e.latLng.lng();
+				self.marker.setPosition(new google.maps.LatLng(lat, lng));
+			});
 
 			google.maps.event.addListener( self.map, 'click', function( e ) {
 				self._geocodeLatLng( e.latLng, self._updateField );
